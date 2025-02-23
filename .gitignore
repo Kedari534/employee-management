@@ -1,0 +1,19 @@
+# Node.js (Frontend)
+node_modules/
+dist/
+.env
+
+# Java (Backend)
+target/
+*.log
+*.class
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.iml
+
+# OS Files
+.DS_Store
+Thumbs.db
+

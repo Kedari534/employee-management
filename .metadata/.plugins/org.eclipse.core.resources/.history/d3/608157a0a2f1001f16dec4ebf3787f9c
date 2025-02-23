@@ -1,0 +1,5 @@
+package com.kedari.repository;
+
+public class EmployeeRepository {
+
+}

@@ -1,0 +1,74 @@
+package com.kedari.controller;
+
+import com.kedari.model.Employee;
+import com.kedari.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@CrossOrigin(origins = "http://localhost:3000")  // To connect React frontend
+@RestController
+@RequestMapping("/api/employees")
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeService employeeService;
+
+    // Get all employees
+    @GetMapping
+    public ResponseEntity<List<Employee>> getAllEmployees() {
+        return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
+    }
+
+    // Get employee by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+        Employee employee = employeeService.getEmployeeById(id);
+        if (employee != null) {
+            return new ResponseEntity<>(employee, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // Create new employee with duplicate email check
+    @PostMapping
+    public ResponseEntity<?> createEmployee(@RequestBody Employee employee) {
+        try {
+            Employee createdEmployee = employeeService.createEmployee(employee);
+            return new ResponseEntity<>(createdEmployee, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Update employee with email uniqueness check
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) {
+        try {
+            Employee updatedEmployee = employeeService.updateEmployee(id, employee);
+            if (updatedEmployee != null) {
+                return new ResponseEntity<>(updatedEmployee, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Employee not found", HttpStatus.NOT_FOUND);
+            }
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Delete employee
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
+        Employee existingEmployee = employeeService.getEmployeeById(id);
+        if (existingEmployee != null) {
+            employeeService.deleteEmployee(id);
+            return new ResponseEntity<>("Employee deleted successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Employee not found", HttpStatus.NOT_FOUND);
+        }
+    }
+}

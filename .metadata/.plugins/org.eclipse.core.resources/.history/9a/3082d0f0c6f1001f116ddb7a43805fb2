@@ -1,0 +1,63 @@
+package com.kedari.service;
+
+import com.kedari.model.Employee;
+import com.kedari.repository.EmployeeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    // Get all employees
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
+    }
+
+    // Get employee by ID
+    public Employee getEmployeeById(Long id) {
+        return employeeRepository.findById(id).orElse(null);
+    }
+
+    // Create employee with unique email validation
+    public Employee createEmployee(Employee employee) {
+        // Check if an employee with the same email already exists
+        if (employeeRepository.existsByEmail(employee.getEmail())) {
+            throw new IllegalArgumentException("Employee with email " + employee.getEmail() + " already exists.");
+        }
+        return employeeRepository.save(employee);
+    }
+
+    // Update existing employee
+    public Employee updateEmployee(Long id, Employee updatedEmployee) {
+        Optional<Employee> existingEmployee = employeeRepository.findById(id);
+
+        if (existingEmployee.isPresent()) {
+            Employee emp = existingEmployee.get();
+            emp.setFirstName(updatedEmployee.getFirstName());
+            emp.setLastName(updatedEmployee.getLastName());
+
+            // Check if the updated email is unique (if it has changed)
+            if (!emp.getEmail().equals(updatedEmployee.getEmail()) &&
+                employeeRepository.existsByEmail(updatedEmployee.getEmail())) {
+                throw new IllegalArgumentException("Email " + updatedEmployee.getEmail() + " is already in use.");
+            }
+
+            emp.setEmail(updatedEmployee.getEmail());
+            emp.setDepartment(updatedEmployee.getDepartment());
+            return employeeRepository.save(emp);
+        } else {
+            return null;
+        }
+    }
+
+    // Delete employee by ID
+    public void deleteEmployee(Long id) {
+        employeeRepository.deleteById(id);
+    }
+}

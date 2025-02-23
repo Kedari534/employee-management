@@ -1,0 +1,5 @@
+package com.kedari.model;
+
+public class Employee {
+
+}

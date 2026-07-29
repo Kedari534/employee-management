@@ -1,48 +1,64 @@
 package com.kedari.service;
 
-import com.kedari.model.Employee;
+import com.kedari.dto.EmployeeDTO;
+import com.kedari.entity.Department;
+import com.kedari.entity.Employee;
+import com.kedari.mapper.EmployeeMapper;
+import com.kedari.repository.DepartmentRepository;
 import com.kedari.repository.EmployeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class EmployeeService {
+    private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
-
-    public List<Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+    public List<EmployeeDTO> getAllEmployees() {
+        return employeeRepository.findAll().stream()
+                .map(EmployeeMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public Employee getEmployeeById(Long id) {
-        return employeeRepository.findById(id).orElse(null);
+    public EmployeeDTO getEmployeeById(Long id) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        return EmployeeMapper.toDTO(employee);
     }
 
-    public Employee createEmployee(Employee employee) {
-        Optional<Employee> existingEmployee = employeeRepository.findByEmail(employee.getEmail());
-        if (existingEmployee.isPresent()) {
-            throw new RuntimeException("Employee with email " + employee.getEmail() + " already exists");
+    public EmployeeDTO createEmployee(EmployeeDTO dto) {
+        Department department = null;
+        if (dto.getDepartmentId() != null) {
+            department = departmentRepository.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
         }
-        return employeeRepository.save(employee);
+        Employee employee = EmployeeMapper.toEntity(dto, department);
+        Employee saved = employeeRepository.save(employee);
+        return EmployeeMapper.toDTO(saved);
     }
 
-    public Employee updateEmployee(Long id, Employee updatedEmployee) {
-        Optional<Employee> existingEmployee = employeeRepository.findById(id);
-
-        if (existingEmployee.isPresent()) {
-            Employee emp = existingEmployee.get();
-            emp.setFirstName(updatedEmployee.getFirstName());
-            emp.setLastName(updatedEmployee.getLastName());
-            emp.setEmail(updatedEmployee.getEmail());
-            emp.setDepartment(updatedEmployee.getDepartment());
-            return employeeRepository.save(emp);
-        } else {
-            throw new RuntimeException("Employee with ID " + id + " not found");
+    public EmployeeDTO updateEmployee(Long id, EmployeeDTO dto) {
+        Employee existing = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        
+        Department department = null;
+        if (dto.getDepartmentId() != null) {
+            department = departmentRepository.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
         }
+
+        existing.setFirstName(dto.getFirstName());
+        existing.setLastName(dto.getLastName());
+        existing.setEmail(dto.getEmail());
+        existing.setStatus(Employee.EmployeeStatus.valueOf(dto.getStatus()));
+        existing.setDepartment(department);
+
+        Employee saved = employeeRepository.save(existing);
+        return EmployeeMapper.toDTO(saved);
     }
 
     public void deleteEmployee(Long id) {

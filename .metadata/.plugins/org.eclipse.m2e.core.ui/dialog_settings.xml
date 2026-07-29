@@ -2,6 +2,8 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="D:\employee-management\employee-backend"/>
+			<item value="D:\employee-management"/>
 			<item value="D:\employee-management\backend"/>
 		</list>
 		<list key="projectNameTemplate">
